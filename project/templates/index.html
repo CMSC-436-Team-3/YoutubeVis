@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% include 'header.html' %}
+
+{% block title %} Home {% endblock %} 
+
+{% block body %} 
+
+{% with messages = get_flashed_messages() %} 
+{% if messages %} 
+    {% for message in messages %} 
+        <div class="alert alert-success" role="alert">{{message}}</div>
+    {% endfor %} 
+{% endif %} 
+{% endwith %} 
+
+<!-- Videos -->
+<div class="container mt-3"> 
+    <h2><b>Videos</b></h2>
+                
+    <table class="table table-hover table-dark">
+        <thead>
+            <tr>
+                <th>Video ID</th>
+                <th>Title</th>
+                <th>Published At</th>
+                <th>Channel ID</th>
+                <th>Channel Title</th>
+                <th>Category ID</th>
+                <th>Trending Date</th>
+                <th>Tags</th>
+                <th>View Count</th>
+                <th>Likes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for video in videos %}
+            <tr>
+                <td>{{video.video_id}}</td>
+                <td>{{video.title}}</td>
+                <td>{{video.published_at}}</td>
+                <td>{{video.channel_id}}</td>
+                <td>{{video.channel_title}}</td>
+                <td>{{video.category_id}}</td>
+                <td>{{video.trending_date}}</td>
+                <td>{{video.tags}}</td>
+                <td>{{video.view_count}}</td>
+                <td>{{video.likes}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    
+</div>
+
+{% endblock %}

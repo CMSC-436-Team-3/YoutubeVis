@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+{% extends "base.html" %}
+{% block body %}
+<body>
+    <h1>{% block title %} Select Parameters for Chart{% endblock %}</h1>
+    <form method="post">
+        <label for="sub_id">SubList Select</label>
+        <br>
+        <select name="sub_id" id="sub_id">
+            <option value={{selected_v}}
+            selected>{{selected_v}}</option>
+            {% for sub_list in sub_list %}
+            <option value={{sub_list}}>{{sub_list}}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit">Select Sub List</button>
+        <br>
+        <label for="d_id">Select from Sub List</label>
+        <br>
+        <select name="d_id" id="d_id">
+            <option value={{s_d}}
+            selected>{{s_d}}</option>
+            {% for district in districts %}
+            <option value={{district}}>{{district}}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="s_id">Sort by</label>
+        <br>
+        <select name="s_id" id="s_id">
+            <option value={{s_s}}
+            selected>{{s_s}}</option>
+            {% for sort in sortby %}
+            <option value={{sort}}>{{sort}}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    <h2>Charts</h2>
+    <iframe src = "{{ url_for('chartshow')}}" height ="1000" width = "2000" title="FRAME"></iframe>
+</body>
+{% endblock %}
+</html>
