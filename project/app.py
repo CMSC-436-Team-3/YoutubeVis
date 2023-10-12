@@ -59,7 +59,7 @@ def update_databases():
     if __name__ == "__main__" and len(sys.argv) > 1:
         filename = str(sys.argv[1])
     else:
-        filename = 'crime500.csv'
+        filename = 'BR_youtube_trending_data.csv'
 
     with open(filename) as file:
         reader = csv.reader(file)
