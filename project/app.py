@@ -31,8 +31,8 @@ class Video(db.Model):
     category_id = db.Column(db.String(80), nullable = False)
     trending_date = db.Column(db.String(80), nullable = False) # Change this same as published_at
     tags = db.Column(db.String(80), nullable = False)
-    view_count = db.Column(db.Int)
-    likes = db.Column(db.Int)
+    view_count = db.Column(db.String(80), nullable = False)
+    likes = db.Column(db.String(80), nullable = False)
 
     def __init__(self, video_id, title, published_at, channel_id, channel_title, category_id, trending_date, tags, view_count, likes):
         self.video_id = video_id
@@ -70,7 +70,7 @@ def update_databases():
         for row in reader:
             if skip_first == 0:
                 new_row = []
-                for item in row[1:0]:
+                for item in row[:10]:
                     new_row.append(item)
                 data.append(new_row)
             else:
@@ -81,7 +81,7 @@ def update_databases():
         if skip_first == 0: # Skip first line which just has labels for data
             if not(row[0] in hold):
                 hold.append(row[0])
-                new_video = Video(row)
+                new_video = Video(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
                 db.session.add(new_video)
         else:
             skip_first = 0
@@ -123,7 +123,7 @@ def charthome2():
         w_id = request.form.getlist('w_id')
         if w_id == []:
             w_id = ['All']
-        session['weapon'] = w_id
+        session['category_id'] = w_id
         d_id = request.form.getlist('d_id')
         if d_id == []:
             d_id = ['All']
@@ -131,7 +131,7 @@ def charthome2():
         c_id = request.form.getlist('c_id')
         if c_id == []:
             c_id = ['All']
-        session['crime'] = c_id
+        session['video'] = c_id
         start = request.form['min_t']
         end = request.form['max_t']
         s_check, s_msg = date_check(start) 
@@ -187,44 +187,37 @@ def charthome2():
                     session['start'] = user_s
                     session['end'] = user_e
         
-    s_w = session["weapon"].copy() if "weapon" in session else ['All']
-    s_c = session["crime"].copy() if "crime" in session else ['All']
+    s_w = session["category_id"].copy() if "category_id" in session else ['All']
+    s_c = session["video"].copy() if "video" in session else ['All']
     s_d = session["district"].copy() if "district" in session else ['All']
-    choose_s = session["sortby"] if "sortby" in session else 'weapon'
-    sortby= ['weapon','district','crime','weekday','month','hour','age', 'gender', 'ethnicity', 'race']
-    crime_set, weapon_set, district_set = ['All'], ['All'], ['All']
-    for crime in Crime.query.all():
-        hold = crime.description
+    choose_s = session["sortby"] if "sortby" in session else 'category_id'
+    sortby= ['category_id','district','video','weekday','month','hour','age', 'gender', 'ethnicity', 'race']
+    video_set, category_id_set, district_set = ['All'], ['All'], ['All']
+    for video in Video.query.all():
+        hold = video.title
         hold = hold.replace(' ','_')
-        hold1 = crime.weapon
+        hold1 = video.category_id
         hold1 = hold1.replace(' ', "_")
-        if(not(hold in crime_set) and hold != ''):
-            crime_set.append(hold) 
-        if(not(hold1 in weapon_set) and hold1 != ''):
-            weapon_set.append(hold1)
-        if(not(crime.district in district_set) and crime.district != ''):
-            district_set.append(crime.district)
-    weapon_set.append('Not_Recorded'), crime_set.append('Not_Recorded'), district_set.append('Not_Recorded')
+        if(not(hold in video_set) and hold != ''):
+            video_set.append(hold) 
+        if(not(hold1 in category_id_set) and hold1 != ''):
+            category_id_set.append(hold1)
+        #if(not(video.district in district_set) and video.district != ''):
+         #   district_set.append(video.district)
+    category_id_set.append('Not_Recorded'), video_set.append('Not_Recorded')#, district_set.append('Not_Recorded')
     if(not(choose_s in sortby)):
         choose_s = sortby[0]
     sortby.remove(choose_s)
-    for s in s_d:
-        if(s in district_set): district_set.remove(s)
+    #for s in s_d:
+     #   if(s in district_set): district_set.remove(s)
     for s in s_w:
-        if(s in weapon_set): weapon_set.remove(s)
+        if(s in category_id_set): category_id_set.remove(s)
     for s in s_c:
-        if(s in crime_set): crime_set.remove(s)
+        if(s in video_set): video_set.remove(s)
 
     filtered_list, title2, datetitle, date_labels, date_data = get_filtered_list()
-    latitudes, longitudes = [], []
-    for crime in filtered_list:
-        if (crime.latitude != '0' and crime.latitude != ''): latitudes.append(crime.latitude)
-        if (crime.longitude != '0' and crime.longitude != ''): longitudes.append(crime.longitude)
 
-    print(len(latitudes))
-    print(len(longitudes))
-
-    return render_template('chart_home2.html', districts = district_set, sortby = sortby,  crimes = crime_set, weapons = weapon_set, s_s = choose_s, s_w = s_w, s_d = s_d, s_c = s_c, young = min_t_str, old = max_t_str, lats = latitudes, longs = longitudes)
+    return render_template('chart_home2.html', sortby = sortby,  videos = video_set, category_ids = category_id_set, s_s = choose_s, s_w = s_w, s_d = s_d, s_c = s_c, young = min_t_str, old = max_t_str)
     
 def date_check(date):
     monthday = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -260,9 +253,9 @@ def date_check(date):
 
 def min_max_time():
     min_time, max_time = 'inf', 'inf'
-    for crime in Crime.query.all():
-        time = crime.datetime
-        curr_time = datetime.strptime(time, '%Y/%m/%d %H:%M:%S+%f')
+    for video in Video.query.all():
+        time = video.published_at
+        curr_time = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ')
         if(min_time == 'inf' or curr_time < min_time):
             min_time = curr_time
         if(max_time == 'inf' or curr_time > max_time):
@@ -280,8 +273,8 @@ def time_chart(formatted, start, end):
         curr = curr + timedelta(days = 5)
     label.append(end.strftime("%Y/%m/%d"))
     data = [0 for each in label]
-    for crime in formatted:
-        date = crime.datetime
+    for video in formatted:
+        date = video.published_at
         date, i = date[:10], 0
         for each in label:
             if date <= each:
@@ -291,39 +284,31 @@ def time_chart(formatted, start, end):
     return label, data
         
 
-def ret_sort(crime, sort):
-    if sort == 'weapon':
-        return crime.weapon
-    elif sort == 'crime':
-        return crime.description
-    elif sort == 'gender':
-        return crime.gender
-    elif sort == 'ethnicity':
-        return crime.ethnicity
-    elif sort == 'race':
-        return crime.race
-    elif sort == 'district':
-        return crime.district
+def ret_sort(video, sort):
+    if sort == 'category_id':
+        return video.category_id
+    elif sort == 'video':
+        return video.title
     elif sort == 'weekday':
-        time = crime.datetime
+        time = video.published_at
         time = time[:time.index(' ')]
         year, time = int(time[:time.index('/')]), time[time.index('/') + 1:]
         month, day = int(time[:time.index('/')]), int(time[time.index('/') + 1:])
         the_day = date(year,month,day)
         return the_day.weekday()
     elif sort == 'month':
-        time = crime.datetime
+        time = video.published_at
         time = time[:time.index(' ')]
         year, time = int(time[:time.index('/')]), time[time.index('/') + 1:]
         month = int(time[:time.index('/')])
         return month
     elif sort == 'hour':
-        time = crime.datetime
+        time = video.published_at
         time = time[time.index(' ') + 1:]
         hour = int(time[:time.index(':')])
         return hour
     else:
-        age, hold_i = crime.age, 0
+        age, hold_i = video.age, 0
         if(age == ''):
             hold_i = 8
         else:
@@ -341,12 +326,12 @@ def chartshow2():
     month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November','December']
     labels, datas, labelss, weekday = [], [], [], ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
     age_labels = ['[0-10]','[11-20]','[21-30]','[31-40]','[41-50]','[51-60]','[61-70]','[71+]','Not Recorded']
-    choose_s = session["sortby"] if "sortby" in session else 'weapon'
+    choose_s = session["sortby"] if "sortby" in session else 'category_id'
     filtered_list, title2, datetitle, date_labels, date_data = get_filtered_list()
     # latitudes, longitudes = [], []
 
-    # for crime in filtered_list:
-    #     print(crime.latitude, ", ", crime.longitude)
+    # for video in filtered_list:
+    #     print(video.latitude, ", ", video.longitude)
 
     if choose_s == 'weekday':
         for each in weekday: #initilize the data for weekdays (set list of size 7 with 0's)
@@ -367,10 +352,10 @@ def chartshow2():
         for each in labels:
             datas.append(0)
     count_hold = 0
-    for crime in filtered_list:
-        # latitudes.append(crime.latitude)
-        # longitudes.append(crime.longitude)
-        curr = ret_sort(crime,choose_s) #ret_sort function will, return element or what index to add data to
+    for video in filtered_list:
+        # latitudes.append(video.latitude)
+        # longitudes.append(video.longitude)
+        curr = ret_sort(video,choose_s) #ret_sort function will, return element or what index to add data to
         if(choose_s == 'weekday'):
             datas[curr] += 1
         elif(choose_s == 'month'):
@@ -410,7 +395,7 @@ def chartshow2():
     session['datas'] = datas
     #this is just some string manipulation to get titles of charts
 
-    title = 'Baltimore Crime Data Visualization: Sorted by ' + choose_s
+    title = 'Baltimore video Data Visualization: Sorted by ' + choose_s
     title1 = json.dumps(title)
 
     
@@ -419,54 +404,48 @@ def chartshow2():
     return render_template('chart2.html', datas = datas_json, labels = labels_json, title1 = title1, title2 = title2, range = datetitle, date_d = date_d_json, date_l = date_l_json)
 
 def get_filtered_list():
-    weapon_set = session["weapon"].copy() if "weapon" in session else ['All']
-    crime_set = session["crime"].copy() if "crime" in session else ['All']
-    district_set = session["district"].copy() if "district" in session else ['All']
+    category_id_set = session["category_id"].copy() if "category_id" in session else ['All']
+    video_set = session["video"].copy() if "video" in session else ['All']
+    #district_set = session["district"].copy() if "district" in session else ['All']
     start_date = session["start"] if "start" in session else min_max_time()[0]
     end_date = session["end"] if "end" in session else min_max_time()[1]
     start_date = start_date.replace(tzinfo=None)
     end_date = end_date.replace(tzinfo=None)
     filtered_set = []
-    if 'All' in weapon_set:
-        weapon_set = ['All']
-    if 'All' in district_set:
-        district_set = ['All']
-    if 'All' in crime_set:
-        crime_set = ['All']
-    for i in range(len(weapon_set)):
-        weapon_set[i] = weapon_set[i].replace('_',' ')
-        if weapon_set[i] == 'Not Recorded':
-            weapon_set[i] = ''
-    for i in range(len(district_set)):
-        district_set[i] = district_set[i].replace('_',' ')
-        if district_set[i] == 'Not_Recorded':
-            district_set[i] = ''
-    for i in range(len(crime_set)):
-        crime_set[i] = crime_set[i].replace('_',' ')
-        if crime_set[i] == 'Not_Recorded':
-            crime_set[i] = ''
-    for crime in Crime.query.all():
-        d, w, c = crime.district, crime.weapon, crime.description
-        d, w, c = d.replace('_',' '), w.replace('_',' '), c.replace('_',' ')
-        timedate = crime.datetime
-        timedate = datetime.strptime(timedate, '%Y/%m/%d %H:%M:%S+%f')
+    if 'All' in category_id_set:
+        category_id_set = ['All']
+    if 'All' in video_set:
+        video_set = ['All']
+    for i in range(len(category_id_set)):
+        category_id_set[i] = category_id_set[i].replace('_',' ')
+        if category_id_set[i] == 'Not Recorded':
+            category_id_set[i] = ''
+    #for i in range(len(district_set)):
+     #   district_set[i] = district_set[i].replace('_',' ')
+       # if district_set[i] == 'Not_Recorded':
+      #     district_set[i] = ''
+    for i in range(len(video_set)):
+        video_set[i] = video_set[i].replace('_',' ')
+        if video_set[i] == 'Not_Recorded':
+            video_set[i] = ''
+    for video in Video.query.all():
+        w, c = video.category_id, video.title
+        w, c = w.replace('_',' '), c.replace('_',' ')
+        timedate = video.published_at
+        timedate = datetime.strptime(timedate, '%Y-%m-%dT%H:%M:%SZ')
         timedate = timedate.replace(tzinfo=None)
-        if(d in district_set or district_set == ['All']):
-            if(w in weapon_set or weapon_set == ['All']):
-                if(c in crime_set or crime_set == ['All']):
-                    if(timedate >= start_date and timedate <= end_date):
-                        filtered_set.append(crime)
-    title2 = 'Data is filtered from: Weapons('
-    for each in weapon_set:
+        if(w in category_id_set or category_id_set == ['All']):
+            if(c in video_set or video_set == ['All']):
+                if(timedate >= start_date and timedate <= end_date):
+                    filtered_set.append(video)
+    title2 = 'Data is filtered from: category_ids('
+    for each in category_id_set:
         title2 += each + ','
     title2 = title2[:-1]
-    title2 += ') Crimes('
-    for each in crime_set:
+    title2 += ') videos('
+    for each in video_set:
         title2 += each + ','
     title2 = title2[:-1]
-    title2 += ') Districts('
-    for each in district_set:
-        title2 += each + ','
     title2 = title2[:-1]
     title2 += ')'
 
@@ -487,7 +466,7 @@ def test():
         leng = request.form.getlist('languages')
         session['array'] = leng
     leng = ' yes'
-    #data1 = session["weapon"].copy() if "district" in session else 'No data yet'
+    #data1 = session["category_id"].copy() if "district" in session else 'No data yet'
     data1 = session["young"] if "young" in session else 'No data yet'
     #data1 = data1.strftime("%m/%d/%Y, %H:%M:%S")
     data2 = session["old"] if "old" in session else 'No choice'
