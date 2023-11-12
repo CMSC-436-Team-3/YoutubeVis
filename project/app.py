@@ -1,12 +1,13 @@
 import pandas as pd
 import plotly.express as px
+from plotly.subplots import make_subplots
 from dash import Dash, html, dcc, Input, Output
 import sys
 from datetime import datetime
 import statsmodels.api as sm
 
 app = Dash()
-vis_options = ['views-likes-graph', 'views-per-channel', 'likes-dislikes']
+vis_options = ['views-likes-graph', 'category-stats-bar', 'likes-dislikes']
 
 # Import csv and convert to dataframe, then sort by views
 if __name__ == "__main__" and len(sys.argv) > 1:
@@ -33,9 +34,6 @@ unique_category_data = unique_category_data.sort_values('categoryId', ascending=
 unique_category_id = unique_category_data['categoryId'].unique()
 unique_category_name = unique_category_data['categoryName'].unique()
 
-
-print(unique_category_id)
-
 app.layout = html.Div(children=[
     html.H1(children='CMSC 436 Youtube Vis'),
     geo_dropdown,
@@ -54,8 +52,7 @@ app.layout = html.Div(children=[
         id='category-checkbox',
         options=[{'label': str(unique_category_id[i]) + " - " + unique_category_name[i], 'value': unique_category_id[i]}
                  for i in range(len(unique_category_id))],
-        value=data['categoryId'].unique(),
-        labelStyle={'display': 'block'}
+        inline=True
     ),
 
 ])
@@ -65,9 +62,8 @@ app.layout = html.Div(children=[
     Output(component_id='views-likes-graph', component_property='figure'),
     Input(component_id=geo_dropdown, component_property='value'),
     Input('date-slider', 'value'),
-    Input('category-checkbox', 'value'),
+    Input('category-checkbox', 'value')
 )
-
 
 def update_graph(selected_vis, selected_date_range, selected_categories):
 
@@ -82,19 +78,27 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
     if(selected_vis == vis_options[0]):
         fig = px.scatter(filtered_data,
                         x='view_count', y='likes',
-                        color='categoryId',
+                        trendline='ols',
+                        trendline_scope='overall',
+                        color='categoryName',
                         hover_name='title',
                         title=f'Views compared to Likes for Trending Videos',
                         log_x=True,
                         log_y=True)
     elif(selected_vis == vis_options[1]):
-        fig = px.bar(filtered_data,
-                        x='channelTitle', y='view_count',
-                        color='channelId',
-                        hover_name='channelTitle',
-                        title=f'Total Views per Channel',
-                        log_y=True)
-        fig.update_layout(showlegend=False)
+            figures = [
+            px.bar(filtered_data, x='categoryName', y='view_count', color='categoryName', title=f'Views per Category', log_y=True),
+            px.bar(filtered_data, x='categoryName', y='likes', color='categoryName', title=f'Likes per Category', log_y=True),
+            px.bar(filtered_data, x='categoryName', y='comment_count', color='categoryName', title=f'Comments per Category', log_y=True)
+            ]
+
+            fig = make_subplots(rows=len(figures), cols=1)
+
+            for i, figure in enumerate(figures):
+                for trace in range(len(figure["data"])):
+                    fig.append_trace(figure["data"][trace], row=i+1, col=1)
+
+            fig.update_layout(showlegend=False)
     elif(selected_vis == vis_options[2]):
         fig = px.scatter(filtered_data,
                         x='view_count', y=['likes', 'dislikes'],
