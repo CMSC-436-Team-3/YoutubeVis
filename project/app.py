@@ -1,4 +1,5 @@
 import pandas as pd
+import seaborn as sns
 import plotly.express as px
 from plotly.subplots import make_subplots
 from dash import Dash, html, dcc, Input, Output
@@ -7,7 +8,7 @@ from datetime import datetime
 import statsmodels.api as sm
 
 app = Dash()
-vis_options = ['views-likes-graph', 'category-stats-bar', 'likes-dislikes']
+vis_options = ['views-likes-graph', 'category-stats-bar', 'likes-dislikes', 'channel-popularity']
 
 # Import csv and convert to dataframe, then sort by views
 if __name__ == "__main__" and len(sys.argv) > 1:
@@ -76,15 +77,20 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
 
 
     if(selected_vis == vis_options[0]):
-        fig = px.scatter(filtered_data,
-                        x='view_count', y='likes',
-                        trendline='ols',
-                        trendline_scope='overall',
-                        color='categoryName',
-                        hover_name='title',
-                        title=f'Views compared to Likes for Trending Videos',
-                        log_x=True,
-                        log_y=True)
+        # Interactive Scatter Plot
+        filtered_data['trending_date'] = pd.to_datetime(filtered_data['trending_date'])
+        filtered_data['publishedAt'] = pd.to_datetime(filtered_data['publishedAt'])
+
+        # Calculating the number of days a video has been trending by the difference between 'trending_date' and 'publishedAt'
+        filtered_data['days_to_trend'] = (filtered_data['trending_date'] - filtered_data['publishedAt']).dt.days
+
+        # Adding the hovering interactivity to the scatter plot
+        fig = px.scatter(filtered_data, x='view_count', y='likes', size='comment_count', color='categoryName',
+                        hover_data=['title', 'days_to_trend'],
+                        title='Views to Likes', size_max=60)
+
+        # Updating the graph size
+        fig.update_layout(height=800, width=1200)
     elif(selected_vis == vis_options[1]):
             figures = [
             px.bar(filtered_data, x='categoryName', y='view_count', color='categoryName', title=f'Views per Category', log_y=True),
@@ -106,7 +112,22 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
                         title=f'Likes and Dislikes',
                         log_x=True,
                         log_y=True)
+    elif(selected_vis == vis_options[3]):
+
+        fig = px.sunburst(filtered_data, path=['categoryName', 'channelTitle'], values='view_count',
+                        title='Sunburst Chart of View Count by Category and Channel')
+
+        # Increase the size
+        fig.update_layout(height=600, width=800)
+
+        # Add interactive features
+        fig.update_layout(margin=dict(l=0, r=0, b=0, t=40))
+
+        fig.update_traces(
+            hovertemplate='<b>%{label}</b><br>View Count: %{value}<extra></extra>'
+        )
     return fig
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
