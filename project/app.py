@@ -114,8 +114,10 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
                         log_y=True)
     elif(selected_vis == vis_options[3]):
 
-        fig = px.sunburst(filtered_data, path=['categoryName', 'channelTitle'], values='view_count',
-                        title='Sunburst Chart of View Count by Category and Channel')
+        top = filtered_data.head(50)
+
+        fig = px.sunburst(top, path=['categoryName', 'channelTitle'], values='view_count',
+                        title='Sunburst Chart of View Count by Category and Channel (Top 50)')
 
         # Increase the size
         fig.update_layout(height=600, width=800)

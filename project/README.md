@@ -3,21 +3,18 @@
 # How to Run:
 ** NOTE: Ensure you have a Python interpreter able to run Flash applications, such as virtualenv with flask installed **
 
-Within a virtual environment with all prerequisites installed, path to the location of the 'app.py' file (this should be /cmsc447-team4-project/project).
+With all prerequisite models installed, path to the location of the 'app.py' file (this should be /YoutubeVis/project).
 Once there, you can run the file by with the following command:
     python app.py '[FILENAME]'
-Where [FILENAME] is replaced with the .csv file you want to pull data from. 'crime500.csv' is recommended. If a file isn't provided, a default one will be selected.
+Where [FILENAME] is replaced with the .csv file you want to pull data from. If a file isn't provided, a default one will be selected.
 
 Once the application is started, you can open it in your web browser with the link tied to it, which should be provided in the terminal you are using.
 
-The application itself is very straightforward, at the top of the screen are filters allowing you to choose whether to see all crimes, or only crimes relating to the following:
-    * Crime Type (All by default)
-    * Weapon Type (All by default)
-    * District (All by default)
-    * Timespan
-The timespan is limited to all crimes between 01/25/23 and 04/22/23, which will be the default timespan. You can type in different dates if you want to narrow down the timespan.
-Once filters are selected, you can choose how data is sorted (by weapon, district, crime, weekday, month, hour, or demographic information).
+The web app will display a title, a drop down menu, a visualization, as well as some filters in the form of checkboxes and a timeline. You can open the drop down menu to choose different visualizations, the four currently implemented are:
+* Likes to Views
+* User Engagement
+* Likes and Dislikes
+* Sunburst Popularity Chart
+Some of these visualizaitons are currently in an unfinished state, with plans to update them to better represent the data.
 
-Below the filters is the heatmap, which can be navigated using the mouse or the buttons on the map itself. Hold left-click and drag to move around the map, and use the scroll wheel or the +/- buttons on the heatmap to zoom in and out. The heatmap will update based on the chosen filters.
-
-Below the heatmap is the graphs and charts, which will automatically update based on the chosen filters.
+The filters at the bottom of the web app allows you to change the data being presented. You can use the timeline to set a specific window from which to gather data, and the visualizations will only count data from videos published within the window. The checkboxes can be used to only display certain categories, such as Music, Gaming, Entertainment, etc. When no checkboxes are selected, all data will be shown; otherwise if you have at least one checkbox selected it will only display selected data.
