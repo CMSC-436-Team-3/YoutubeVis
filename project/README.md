@@ -28,6 +28,6 @@ Currently, this application only functions using United States data as US_youtub
 # Clearing data
 If you encounter errors or unexpected behaviors:
 * Restart the 'app.py' application
-* Switching between different visualization does cause slight loading time
+* Switching between different visualization might cause slight loading time
 
 Note: As of 12/4/2023 there is no issue of this.
