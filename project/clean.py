@@ -35,10 +35,11 @@ if __name__=="__main__":
             if category_id == ids[j]:
                 data.at[i, 'categoryId'] = titles[j]
                 break
-    # hard code number of columns
-    num_column = 16
 
-    reshaped_data = np.array(data).reshape(-1, num_column)
+    columns_to_drop = ['video_id', 'tags', 'thumbnail_link', 'comments_disabled', 'ratings_disabled', 'description']
+    data = data.drop(columns=columns_to_drop)
+
+
+    reshaped_data = np.array(data).reshape(-1, len(data.columns))
     df = pd.DataFrame(reshaped_data, columns=[data.columns])
-
     df.to_csv('Updated_US_youtube_trending_data.csv', index=False)

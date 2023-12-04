@@ -132,7 +132,7 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
         fig.update_yaxes(type="log")
     elif(selected_vis == vis_options[2]):
 
-        sum_data = filtered_data[['categoryName', 'likes', 'dislikes']].groupby(['categoryName']).mean()
+        sum_data = filtered_data[['categoryName', 'likes', 'dislikes']].groupby(['categoryName']).sum()
         categories = list(set(filtered_data['categoryName']))
         categories.sort()
 
@@ -171,7 +171,7 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
 
         fig.update_layout(barmode='relative')
         fig.update_layout(
-            title=dict(text='Average Likes and Dislikes per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),               
+            title=dict(text='Total Likes and Dislikes per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),               
             x=0.5
         ))
 
