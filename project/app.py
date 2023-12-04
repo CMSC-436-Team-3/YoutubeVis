@@ -9,7 +9,7 @@ from datetime import datetime
 import statsmodels.api as sm
 
 app = Dash()
-vis_options = ['Views to Likes per Video', 'User Engagement per Category', 'Likes to Dislikes per Category', 'Channel Popularity']
+vis_options = ['Views to Likes per Video', 'User Engagement per Category', 'Likes to Dislikes per Category', 'Top Channels Popularity']
 
 # Import csv and convert to dataframe, then sort by views
 if __name__ == "__main__" and len(sys.argv) > 1:
@@ -39,7 +39,9 @@ unique_category_name = unique_category_data['categoryName'].unique()
 app.layout = html.Div(children=[
     html.H1(children='CMSC 436 Group Project - Youtube Popularity Visualization'),
     geo_dropdown,
-    dcc.Graph(id=vis_options[0]),
+    dcc.Graph(id=vis_options[0], style = {
+        'margin-left': 'auto',
+    }),
 
     dcc.RangeSlider(
         id='date-slider',
@@ -87,17 +89,20 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
 
         # Adding the hovering interactivity to the scatter plot
         fig = px.scatter(filtered_data, x='view_count', y='likes', size='comment_count', color='categoryName',
-                        hover_data=['title', 'days_to_trend'],
+                        hover_name='title',
+                        hover_data=['days_to_trend'],
                         labels={
                             "view_count": "Number of Views",
                             "likes": "Number of Likes",
-                            "categoryName": "Category"
+                            "categoryName": "Category",
+                            "comment_count": "Comment Count",
+                            "days_to_trend":"Number of Days Trending"
                         },
                         size_max=60)
 
         # Updating the graph size and title
         fig.update_layout(
-            title=dict(text='Views to Likes per Video', font=dict(size=50), automargin=True, yref='container'),
+            title=dict(text='Views to Likes per Video', font=dict(size=50), automargin=True, yref='container', x=0.5),
             height=600, 
             width=1800
         )
@@ -127,49 +132,46 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
         fig.update_yaxes(type="log")
     elif(selected_vis == vis_options[2]):
 
-        sum_data = filtered_data[['categoryName', 'likes', 'dislikes']].groupby(['categoryName']).sum()
+        sum_data = filtered_data[['categoryName', 'likes', 'dislikes']].groupby(['categoryName']).mean()
         categories = list(set(filtered_data['categoryName']))
         categories.sort()
 
         a = sum_data['likes']
         likes = -1*a.astype(int)
         likes = likes.tolist()
-       # for i in range(len(likes)):
-        #    likes[i] = likes[i]/1000
+        likes_labels = a.astype(int)
+        likes_labels = likes_labels.tolist()
 
         a = sum_data['dislikes']
         dislikes = a.astype(int)
         dislikes = dislikes.tolist()
-        #for i in range(len(dislikes)):
-         #   dislikes[i] = dislikes[i]/1000
-
-        print(likes)
-        print(dislikes)
 
         fig = go.Figure(data=[
             go.Bar(name='Likes',
-           y=categories,
-           x=likes,
-           orientation='h',
-           marker=dict(color='#00b300', line=dict(
-               color='rgba(0, 0, 0, 1.0)', width=0.5)),
-           hoverinfo='none',
-           showlegend=False,
+            y=categories,
+            x=likes,
+            text=likes_labels,
+            orientation='h',
+            marker=dict(color='#00b300', line=dict(
+                color='rgba(0, 0, 0, 1.0)', width=0.5)),
+            hovertemplate="%{y}: <br>Likes: %{text}",
+            showlegend=False,
            ),
             go.Bar(name='Dislikes',
-           y=categories,
-           x=dislikes,
-           orientation='h',
-           marker=dict(color='#ff4d4d', line=dict(
-               color='rgba(0, 0, 0, 1.0)', width=0.5)),
-           hoverinfo='none',
-           showlegend=False,
+            y=categories,
+            x=dislikes,
+            text=dislikes,
+            orientation='h',
+            marker=dict(color='#ff4d4d', line=dict(
+                color='rgba(0, 0, 0, 1.0)', width=0.5)),
+                hovertemplate="%{y}: <br>Disikes: %{text}",
+            showlegend=False,
            )
         ])
 
         fig.update_layout(barmode='relative')
         fig.update_layout(
-            title=dict(text='Total Likes and Dislikes per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),               
+            title=dict(text='Average Likes and Dislikes per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),               
             x=0.5
         ))
 
@@ -182,68 +184,32 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
             showgrid=False,
             fixedrange=True,
         )
-        annotations = []
 
-        for yd, like, dislike in zip(categories, likes, dislikes):
-            annotations.append(dict(xref='x', yref='y',
-                                    x=like / 2, y=yd,
-                                    text=str(-1*like),
-                                    font=dict(family='Arial', size=14,
-                                            color='black'),
-                                    showarrow=False,))
-            
-            annotations.append(dict(xref='x', yref='y',
-                                    x=dislike / 2, y=yd,
-                                    text=str(dislike),
-                                    font=dict(family='Arial', size=14,
-                                            color='black'),
-                                    showarrow=False,))
-            
-        annotations.append(dict(text='Likes',
-                    xref="x", yref="paper", textangle=0,
-                    x=-20, y=1.1, showarrow=False,
-                    font=dict(family='Arial', size=19,
-                                color='#AE565B'),
-                    ))
-        annotations.append(dict(text='Dislikes',
-                    xref="x", yref="paper", textangle=0,
-                    x=20, y=1.1, showarrow=False,
-                    font=dict(family='Arial', size=19,
-                                color='#555F76'),
-                    ))
-
-        fig.update_layout(annotations=annotations)
+        fig.add_vline(x=0,
+              fillcolor="black", opacity=1,
+              layer="above", line_width=2,
+              line_color='rgba(0, 0, 0, 1.0)',
+              line_dash="solid")
 
     elif(selected_vis == vis_options[3]):
 
-        fig = make_subplots(rows=1, cols=2, subplot_titles=("Top 50", "Bottom 50"))
-
-        top = filtered_data.head(50)
-        bot = filtered_data.tail(50)
-
-        fig_top = px.sunburst(top, path=['categoryName', 'channelTitle'], values='view_count')
-        fig_bot = px.sunburst(bot, path=['categoryName', 'channelTitle'], values='view_count')
-        top_traces=[]
-        bot_traces=[]
-        for trace in range(len(fig_top["data"])):
-            top_traces.append(fig_top["data"][trace])
-        for trace in range(len(fig_bot["data"])):
-            bot_traces.append(fig_bot["data"][trace])
-
-        for traces in top_traces:
-            fig.append_trace(traces, row=1, col=1)
-        for traces in bot_traces:
-            fig.append_trace(traces, row=1, col=2)
+        fig= px.sunburst(filtered_data.head(50), path=['categoryName', 'channelTitle'], values='view_count')
 
         # Increase the size
         fig.update_layout(height=600, width=800)
 
         # Add interactive features
         fig.update_layout(margin=dict(l=0, r=0, b=0, t=40))
+        fig.update_layout(
+            title=dict(text='Top 50 Most Popular Channels',font=dict(size=25, family='Rockwell, monospace'),               
+            x=0.5
+        ))
+
 
         fig.update_traces(
             hovertemplate='<b>%{label}</b><br>View Count: %{value}<extra></extra>'
         )
+
     return fig
 
 
