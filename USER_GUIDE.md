@@ -1,4 +1,4 @@
-# CMSC 447 - Web Application
+# CMSC 436 - Web Application
 
 # How to Run:
 ** NOTE: Ensure you have a Python interpreter able to run Dash applications, such as virtualenv with Dash installed **
