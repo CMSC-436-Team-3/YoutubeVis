@@ -23,6 +23,7 @@ Before running 'app.py', ensure you have 'youtube_trending_data_updated.csv.' Cr
 https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset.
 This file is located at (/YoutubeVis/project). You can run the file with the following command:
     python app.py '[FILENAME.csv]' '[FILENAME1.json]'
+    
 ex: python app.py US_youtube_trending_data.csv US_category_id.json.
 The file will export as [FILENAME_updated.csv]
 
