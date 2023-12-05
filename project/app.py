@@ -1,12 +1,9 @@
 import pandas as pd
-import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from dash import Dash, html, dcc, Input, Output
 import sys
-from datetime import datetime
-import statsmodels.api as sm
+
 
 app = Dash()
 vis_options = ['Views to Likes per Video', 'User Engagement per Category', 'Likes to Dislikes per Category', 'Top Channels Popularity']
@@ -15,7 +12,7 @@ vis_options = ['Views to Likes per Video', 'User Engagement per Category', 'Like
 if __name__ == "__main__" and len(sys.argv) > 1:
     filename = str(sys.argv[1])
 else:
-    filename = 'Updated_US_youtube_trending_data.csv'
+    filename = 'US_youtube_trending_data_updated.csv'
 
 data = pd.read_csv(filename)
 data.info()
@@ -102,9 +99,10 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
 
         # Updating the graph size and title
         fig.update_layout(
-            title=dict(text='Views to Likes per Video', font=dict(size=50), automargin=True, yref='container', x=0.5),
-            height=600, 
-            width=1800
+            title=dict(text='Scatter plot of Likes vs Views', font=dict(size=50), yref='container', x=0.5),
+            height=600,
+            width=1800,
+            margin=dict(t=100)
         )
 
     elif(selected_vis == vis_options[1]):
@@ -115,19 +113,21 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
         likes = sum_data['likes'].tolist()
         views = sum_data['view_count'].tolist()
         comments = sum_data['comment_count'].tolist()
+        colors = ['#2c7fb8', '#7fcdbb', '#edf8b1']
 
         fig = go.Figure(
             data=[
-        go.Bar(name='Views', x=categories, y=views, offsetgroup=1),
-        go.Bar(name='Likes', x=categories, y=likes, offsetgroup=2),
-        go.Bar(name='Comments', x=categories, y=comments, offsetgroup=3)
+        go.Bar(name='Views', x=categories, y=views, offsetgroup=1, marker_color=colors[0]),
+        go.Bar(name='Likes', x=categories, y=likes, offsetgroup=2, marker_color=colors[1]),
+        go.Bar(name='Comments', x=categories, y=comments, offsetgroup=3, marker_color=colors[2])
         ])
 
         fig.update_layout(
+            xaxis=dict(categoryorder='total descending'),
             xaxis_title="Category",
             yaxis_title="User Engagement",
             barmode='group', 
-            title=dict(text='User Engagement per Category', font=dict(size=50), automargin=True, yref='container'),
+            title=dict(text='Grouped Bar Chart of User Engagement Metric of Videos', font=dict(size=50), yref='container'),
             width=1900)
         fig.update_yaxes(type="log")
     elif(selected_vis == vis_options[2]):
@@ -155,7 +155,7 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
             marker=dict(color='#00b300', line=dict(
                 color='rgba(0, 0, 0, 1.0)', width=0.5)),
             hovertemplate="%{y}: <br>Likes: %{text}",
-            showlegend=False,
+            showlegend=True,
            ),
             go.Bar(name='Dislikes',
             y=categories,
@@ -165,13 +165,13 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
             marker=dict(color='#ff4d4d', line=dict(
                 color='rgba(0, 0, 0, 1.0)', width=0.5)),
                 hovertemplate="%{y}: <br>Disikes: %{text}",
-            showlegend=False,
+            showlegend=True,
            )
         ])
 
         fig.update_layout(barmode='relative')
         fig.update_layout(
-            title=dict(text='Average Likes and Dislikes per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),               
+            title=dict(text='Spine Chart of Average Likes and Dislikes Per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),
             x=0.5
         ))
 
@@ -201,7 +201,7 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
         # Add interactive features
         fig.update_layout(margin=dict(l=0, r=0, b=0, t=40))
         fig.update_layout(
-            title=dict(text='Top 50 Most Popular Channels',font=dict(size=25, family='Rockwell, monospace'),               
+            title=dict(text='Sunburst Chart of the Top 50 Most Popular Channels',font=dict(size=25, family='Rockwell, monospace'),
             x=0.5
         ))
 
