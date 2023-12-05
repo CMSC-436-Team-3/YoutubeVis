@@ -19,7 +19,7 @@ The web app will display a title, a drop down menu, a visualization, as well as 
 The filters at the bottom of the web app allows you to change the data being presented. You can use the timeline to set a specific window from which to gather data, and the visualizations will only count data from videos published within the window. The checkboxes can be used to only display certain categories, such as Music, Gaming, Entertainment, etc. When no checkboxes are selected, all data will be shown; otherwise if you have at least one checkbox selected it will only display selected data.
 
 # Data processing
-Before running 'app.py', ensure you have 'Updated_youtube_trending_data.csv.' Create it using 'clean.py,' which requires a .csv file and a .json file pair from the dataset linked,
+Before running 'app.py', ensure you have 'youtube_trending_data_updated.csv.' Create it using 'clean.py,' which requires a .csv file and a .json file pair from the dataset linked,
 https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset.
 This file is located at (/YoutubeVis/project). You can run the file with the following command:
     python app.py '[FILENAME.csv]' '[FILENAME1.json]'
