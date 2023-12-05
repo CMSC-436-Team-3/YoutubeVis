@@ -21,9 +21,10 @@ The filters at the bottom of the web app allows you to change the data being pre
 # Data processing
 Before running 'app.py', ensure you have 'youtube_trending_data_updated.csv.' Create it using 'clean.py,' which requires a .csv file and a .json file pair from the dataset linked,
 https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset.
-This file is located at (/YoutubeVis/project). You can run the file with the following command:
-    python app.py '[FILENAME.csv]' '[FILENAME1.json]'
-    
+This file is located at (/YoutubeVis/project).
+
+You can run the file with the following command:
+    python app.py '[FILENAME.csv]' '[FILENAME1.json]'   
 ex: python app.py US_youtube_trending_data.csv US_category_id.json.
 The file will export as [FILENAME_updated.csv]
 
