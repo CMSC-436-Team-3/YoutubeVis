@@ -6,14 +6,17 @@ import sys
 
 
 app = Dash()
+
+# Titles for each of the different vis options to be used in dropdown menu
 vis_options = ['Views to Likes per Video', 'User Engagement per Category', 'Likes to Dislikes per Category', 'Top Channels Popularity']
 
-# Import csv and convert to dataframe, then sort by views
+# Take inputted filename from command line or use default if none is given
 if __name__ == "__main__" and len(sys.argv) > 1:
     filename = str(sys.argv[1])
 else:
     filename = 'US_youtube_trending_data_updated.csv'
 
+# Convert the .csv into a dataframe then sort by total views
 data = pd.read_csv(filename)
 data.info()
 data.sort_values(by=['view_count'])
@@ -33,6 +36,7 @@ unique_category_data = unique_category_data.sort_values('categoryId', ascending=
 unique_category_id = unique_category_data['categoryId'].unique()
 unique_category_name = unique_category_data['categoryName'].unique()
 
+# Define app layout
 app.layout = html.Div(children=[
     html.H1(children='CMSC 436 Group Project - Youtube Popularity Visualization'),
     geo_dropdown,
@@ -66,6 +70,7 @@ app.layout = html.Div(children=[
     Input('category-checkbox', 'value')
 )
 
+# Update current visualization bsaed on dropdown selection and filters
 def update_graph(selected_vis, selected_date_range, selected_categories):
 
     start_date = date_range[selected_date_range[0]]
@@ -75,9 +80,9 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
     if selected_categories:
         filtered_data = filtered_data[filtered_data['categoryId'].isin(selected_categories)]
 
-
+    # Views to Likes Interactive Scatter/Bubble Chart
     if(selected_vis == vis_options[0]):
-        # Interactive Scatter Plot
+
         filtered_data['trending_date'] = pd.to_datetime(filtered_data['trending_date'])
         filtered_data['publishedAt'] = pd.to_datetime(filtered_data['publishedAt'])
 
@@ -99,22 +104,26 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
 
         # Updating the graph size and title
         fig.update_layout(
-            title=dict(text='Scatter plot of Likes vs Views', font=dict(size=50), yref='container', x=0.5),
+            title=dict(text='Views to Likes per Video', font=dict(size=50), yref='container', x=0.5),
             height=600,
             width=1800,
             margin=dict(t=100)
         )
 
+    # User Engagement Bar Chart
     elif(selected_vis == vis_options[1]):
-        sum_data = filtered_data[['categoryName', 'likes', 'view_count', 'comment_count']].groupby(['categoryName']).sum()
+        # Get mean data
+        sum_data = filtered_data[['categoryName', 'likes', 'view_count', 'comment_count']].groupby(['categoryName']).mean()
         categories = list(set(filtered_data['categoryName']))
         categories.sort()
 
+        # Get columns for graph object visualizations
         likes = sum_data['likes'].tolist()
         views = sum_data['view_count'].tolist()
         comments = sum_data['comment_count'].tolist()
         colors = ['#2c7fb8', '#7fcdbb', '#edf8b1']
 
+        # Define visualization
         fig = go.Figure(
             data=[
         go.Bar(name='Views', x=categories, y=views, offsetgroup=1, marker_color=colors[0]),
@@ -122,30 +131,37 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
         go.Bar(name='Comments', x=categories, y=comments, offsetgroup=3, marker_color=colors[2])
         ])
 
+
+        # Update axes and labels
         fig.update_layout(
             xaxis=dict(categoryorder='total descending'),
             xaxis_title="Category",
             yaxis_title="User Engagement",
             barmode='group', 
-            title=dict(text='Grouped Bar Chart of User Engagement Metric of Videos', font=dict(size=50), yref='container'),
+            title=dict(text='User Engagement per Category', font=dict(size=50), yref='container'),
             width=1900)
         fig.update_yaxes(type="log")
+
+    # Likes to Dislikes Spine Chart
     elif(selected_vis == vis_options[2]):
 
-        sum_data = filtered_data[['categoryName', 'likes', 'dislikes']].groupby(['categoryName']).mean()
+        # Get mean data
+        mean_data = filtered_data[['categoryName', 'likes', 'dislikes']].groupby(['categoryName']).mean()
         categories = list(set(filtered_data['categoryName']))
         categories.sort()
 
-        a = sum_data['likes']
+        # Get columns for graph object visualzations, and labels for the likes
+        a = mean_data['likes']
         likes = -1*a.astype(int)
         likes = likes.tolist()
         likes_labels = a.astype(int)
         likes_labels = likes_labels.tolist()
 
-        a = sum_data['dislikes']
+        a = mean_data['dislikes']
         dislikes = a.astype(int)
         dislikes = dislikes.tolist()
 
+        # Define visualization
         fig = go.Figure(data=[
             go.Bar(name='Likes',
             y=categories,
@@ -169,12 +185,14 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
            )
         ])
 
+        # Update layout
         fig.update_layout(barmode='relative')
         fig.update_layout(
-            title=dict(text='Spine Chart of Average Likes and Dislikes Per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),
+            title=dict(text='Average Likes and Dislikes Per Category',font=dict(size=25, family='Rockwell, monospace',color='rgb(67, 67, 67)'),
             x=0.5
         ))
 
+        # Update axes and label
         fig.update_xaxes(
             showgrid=False,
             showticklabels=False,
@@ -185,12 +203,14 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
             fixedrange=True,
         )
 
+        # Add line to center divide
         fig.add_vline(x=0,
               fillcolor="black", opacity=1,
               layer="above", line_width=2,
               line_color='rgba(0, 0, 0, 1.0)',
               line_dash="solid")
 
+    # Popularity of Channels Sunburst Chart
     elif(selected_vis == vis_options[3]):
 
         fig= px.sunburst(filtered_data.head(50), path=['categoryName', 'channelTitle'], values='view_count')
@@ -201,11 +221,11 @@ def update_graph(selected_vis, selected_date_range, selected_categories):
         # Add interactive features
         fig.update_layout(margin=dict(l=0, r=0, b=0, t=40))
         fig.update_layout(
-            title=dict(text='Sunburst Chart of the Top 50 Most Popular Channels',font=dict(size=25, family='Rockwell, monospace'),
+            title=dict(text='Top 50 Most Popular Channels',font=dict(size=25, family='Rockwell, monospace'),
             x=0.5
         ))
 
-
+        # Add hover over info
         fig.update_traces(
             hovertemplate='<b>%{label}</b><br>View Count: %{value}<extra></extra>'
         )
