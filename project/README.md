@@ -29,7 +29,7 @@ The file will export as [FILENAME_updated.csv]
 Make sure that the .csv and json name matches with the same region Currently, this application defaults to US_youtube_trending_data.csv and US_category_id.json.
 
 
-Note: US_youtube_trending_data.csv is not added in Github by default with its large size, manual installation into the files is necessary. There is a file US_youtube_trending_data_updated.csv that can be used
+Note: US_youtube_trending_data.csv is not added in Github by default with its large size, manual installation into the files is necessary. There is a file US_youtube_trending_data_updated.csv that can be used immediately for app.py.
 
 
 # Clearing data
