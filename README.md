@@ -1,4 +1,4 @@
-CMSC 436 GROUP PROJECT- YOUTUBE DATA VISUALIZATION
+CMSC 436/636 GROUP PROJECT- YOUTUBE DATA VISUALIZATION
 
 Directory:
     The YoutubeVis folder contains the contents of the data visualization project. Within it are two folders, "project" and "VisImages", the README file, and the USER_GUIDE. 
