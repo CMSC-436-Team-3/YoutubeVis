@@ -3,9 +3,15 @@
 import json
 import pandas as pd
 import numpy as np
+import sys
 
-json_data_path = "US_category_id.json"
-csv_data_path = "US_youtube_trending_data.csv"
+if __name__ == "__main__" and len(sys.argv) > 2:
+    csv_data_path = str(sys.argv[1])
+    json_data_path = str(sys.argv[2])
+else:
+    csv_data_path = 'US_youtube_trending_data.csv'
+    json_data_path = 'US_category_id.json'
+
 file_encoding = "utf-8"
 
 
@@ -28,12 +34,13 @@ if __name__=="__main__":
     data = pd.read_csv("US_youtube_trending_data.csv")
 
     print(data['categoryId'].head(5))
-    data['categoryId'] = data['categoryId'].astype(str)
+    data['categoryName'] = data['categoryId'].astype(str)
+
     for i in range(len(data)):
-        category_id = data.at[i, 'categoryId']
+        category_id = data.at[i, 'categoryName']
         for j in range(len(ids)):
             if category_id == ids[j]:
-                data.at[i, 'categoryId'] = titles[j]
+                data.at[i, 'categoryName'] = titles[j]
                 break
 
     columns_to_drop = ['video_id', 'tags', 'thumbnail_link', 'comments_disabled', 'ratings_disabled', 'description']
@@ -42,4 +49,4 @@ if __name__=="__main__":
 
     reshaped_data = np.array(data).reshape(-1, len(data.columns))
     df = pd.DataFrame(reshaped_data, columns=[data.columns])
-    df.to_csv('Updated_US_youtube_trending_data.csv', index=False)
+    df.to_csv(csv_data_path.replace('.csv', '_updated.csv'), index=False)
